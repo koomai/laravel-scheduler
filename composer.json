@@ -1,0 +1,57 @@
+{
+    "name": "koomai/laravel-scheduler",
+    "description": "A Laravel artisan tool to schedule tasks using a database",
+    "keywords": [
+        "php",
+        "laravel",
+        "artisan",
+        "scheduler"
+    ],
+    "homepage": "https://github.com/koomai/laravel-scheduler",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sid K",
+            "email": "sid@koomai.net",
+            "homepage": "https://koomai.net",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "dragonmantank/cron-expression": "^2.2",
+        "illuminate/console": "^5.8",
+        "illuminate/database": "^5.8",
+        "illuminate/events": "^5.8",
+        "koomai/constants": "^1.1"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^3.8",
+        "phpunit/phpunit": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Koomai\\Scheduler\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Koomai\\Scheduler\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Koomai\\Scheduler\\SchedulerServiceProvider"
+            ]
+        }
+    }
+}
