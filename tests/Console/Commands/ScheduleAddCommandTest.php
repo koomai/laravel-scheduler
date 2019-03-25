@@ -2,11 +2,12 @@
 
 namespace Koomai\Scheduler\Tests;
 
+use Koomai\Scheduler\Constants\TaskType;
 use Orchestra\Testbench\TestCase;
 use Koomai\Scheduler\ScheduledTask;
 use Koomai\Scheduler\SchedulerServiceProvider;
 
-class ExampleTest extends TestCase
+class ScheduleAddCommandTest extends TestCase
 {
     /**
      * Setup the test environment.
@@ -15,9 +16,8 @@ class ExampleTest extends TestCase
     {
         parent::setUp();
 
-        $this->withFactories(__DIR__.'/factories');
-        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
-        $this->artisan('migrate', ['--database' => 'testing']);
+        $this->withFactories(__DIR__ . '/factories');
+        $this->artisan('migrate', ['--database' => 'testing'])->run();
     }
 
     /**
@@ -29,7 +29,7 @@ class ExampleTest extends TestCase
     protected function getEnvironmentSetUp($app)
     {
         // Setup config for table name
-        $app['config']->set('scheduler.table', 'scheduled_tasks');
+        // $app['config']->set('scheduler.table', 'scheduled_tasks');
     }
 
     protected function getPackageProviders($app)
@@ -42,8 +42,8 @@ class ExampleTest extends TestCase
      */
     public function this_is_an_example_test()
     {
-        $task = factory(ScheduledTask::class)->create();
-
-        $this->assertInstanceOf(ScheduledTask::class, $task);
+       $this->artisan('schedule:add')
+           ->expectsQuestion('Select type of scheduled task', TaskType::ARTISAN)
+           ->expectsQuestion('Enter your artisan command with arguments and options, e.g. `telescope:prune --hours=24`', 'cache:clear');
     }
 }
