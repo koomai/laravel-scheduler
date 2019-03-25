@@ -1,20 +1,10 @@
 # Laravel Scheduler
 
 Dynamically schedule your [Laravel tasks](https://laravel.com/docs/scheduling) using artisan commands.
-`artisan`. 
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/koomai/laravel-scheduler.svg?style=flat-square)]
-(https://packagist
-.org/packages/koomai/laravel-scheduler)
-[![Build Status](https://img.shields.io/travis/koomai/laravel-scheduler/master.svg?style=flat-square)](https://travis-ci
-.org/koomai/laravel-scheduler)
-[![Quality Score](https://img.shields.io/scrutinizer/g/koomai/laravel-scheduler.svg?style=flat-square)]
-(https://scrutinizer-ci
-.com/g/koomai/laravel-scheduler)
-[![StyleCI](https://styleci.io/repos/175750854/shield?branch=master)](https://styleci.io/repos/175750854)
-[![Total Downloads](https://img.shields.io/packagist/dt/koomai/laravel-scheduler.svg?style=flat-square)]
-(https://packagist
-.org/packages/koomai/laravel-scheduler)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/koomai/laravel-scheduler.svg?style=flat-square)](https://packagist.org/packages/koomai/laravel-scheduler)
+[![Build Status](https://travis-ci.org/koomai/laravel-scheduler.svg?branch=master)](https://travis-ci.org/koomai/laravel-scheduler)
+[![StyleCI](https://github.styleci.io/repos/177488391/shield?branch=master)](https://github.styleci.io/repos/177488391)
 
 Laravel Scheduler allows you to add, view and remove scheduled tasks in a database via artisan commands. This is 
 particularly useful when you want to schedule tasks without having to redeploy code. 
@@ -29,7 +19,23 @@ composer require koomai/laravel-scheduler
 
 ## Usage
 
-`\\ TODO`
+### Add Scheduled Task
+
+`php artisan schedule:add`
+
+### List scheduled tasks (in database)
+
+`php artisan schedule:list`
+
+### Show/Delete a scheduled task (in database)
+
+`php artisan schedule:show <id>`
+
+`php artisan schedule:delete <id>`
+
+### Show due scheduled tasks (from both database and `Console\Kernel`)
+
+`php artisan schedule:due`
 
 ### Testing
 
