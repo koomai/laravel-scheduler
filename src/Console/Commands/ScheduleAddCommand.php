@@ -55,12 +55,12 @@ class ScheduleAddCommand extends ScheduleCommand
         $cron = $this->askForCronExpression();
         $timezone = $this->askForTimezone();
         $environments = config('scheduler.environments') ?: $this->askForEnvironments();
-        $withoutOverlapping = $this->askIfTaskShouldRunWithoutOverlapping();
-        $onOneServer = $this->askIfTaskShouldRunOnOneServer();
-        $runInBackground = $this->askIfTaskShouldRunInBackground();
-        $inMaintenanceMode = $this->askIfTaskShouldRunInMaintenanceMode();
-        $outputPath = $this->askForOutputFilePath();
-        $outputEmail = $this->askForOutputEmail();
+        $withoutOverlapping = config('scheduler.without_overlapping') ?? $this->askIfTaskShouldRunWithoutOverlapping();
+        $onOneServer = config('scheduler.on_one_server') ?? $this->askIfTaskShouldRunOnOneServer();
+        $runInBackground = config('scheduler.run_in_background') ?? $this->askIfTaskShouldRunInBackground();
+        $inMaintenanceMode = config('scheduler.in_maintenance_mode') ?? $this->askIfTaskShouldRunInMaintenanceMode();
+        $outputPath = config('scheduler.output_path') ?? $this->askForOutputFilePath();
+        $outputEmail = config('scheduler.output_email') ?? $this->askForOutputEmail();
 
         $task = $this->repository->create(
             [
@@ -146,7 +146,7 @@ class ScheduleAddCommand extends ScheduleCommand
     {
         $cron = $this->ask('Enter the cron expression for your task, e.g. `0 12 * * 5`. Check out https://crontab.guru if you need help');
 
-        $allowed = config('scheduler.cron_attempts');
+        $allowed = config('scheduler.cron_attempts', 1);
 
         if (! CronExpression::isValidExpression($cron) && $tries < $allowed) {
             $this->warn("{$cron} is an invalid cron expression. Please try again");

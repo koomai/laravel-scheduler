@@ -51,7 +51,7 @@ trait BuildsScheduledTasksTable
                                $task->one_one_server ? 'Yes' : 'No',
                                $task->run_in_background ? 'Yes' : 'No',
                                $task->even_in_maintenance_mode ? 'Yes' : 'No',
-                               $task->output_path ?? 'N/A',
+                               $task->output_path ?: 'N/A',
                                $task->append_output ? 'Yes' : 'No',
                                $task->output_email ?? 'N/A',
                            ];
