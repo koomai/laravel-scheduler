@@ -22,10 +22,11 @@ class SchedulerServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-                __DIR__.'/../config/scheduler.php' => config_path('scheduler.php'),
+                __DIR__.'/../config/scheduler.php' => config_path('questions.php'),
             ], 'config');
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang/', 'scheduler');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
