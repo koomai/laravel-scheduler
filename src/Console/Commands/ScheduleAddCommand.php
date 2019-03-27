@@ -88,10 +88,10 @@ class ScheduleAddCommand extends ScheduleCommand
     {
         switch ($this->type) {
             case TaskType::ARTISAN:
-                $task = $this->artisanTaskHandler();
+                $task = $this->askForArtisanTask();
                 break;
             case TaskType::JOB:
-                $task = $this->jobTaskHandler();
+                $task = $this->askForJobTask();
                 break;
             default:
                 $this->warn('Invalid scheduled task type');
@@ -101,7 +101,7 @@ class ScheduleAddCommand extends ScheduleCommand
         return $task;
     }
 
-    private function artisanTaskHandler()
+    private function askForArtisanTask()
     {
         $artisanCommands = array_keys(Artisan::all());
 
@@ -115,7 +115,7 @@ class ScheduleAddCommand extends ScheduleCommand
         return $task;
     }
 
-    private function jobTaskHandler()
+    private function askForJobTask()
     {
         $job = $this->ask(trans('scheduler::questions.job'));
 
