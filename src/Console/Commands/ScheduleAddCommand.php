@@ -94,7 +94,7 @@ class ScheduleAddCommand extends ScheduleCommand
                 $task = $this->askForJobTask();
                 break;
             default:
-                $this->warn('Invalid scheduled task type');
+                $this->warn(trans('scheduler::messages.invalid_task_type'));
                 exit();
         }
 
@@ -108,7 +108,7 @@ class ScheduleAddCommand extends ScheduleCommand
         $task = $this->anticipate(trans('scheduler::questions.task.artisan'), $artisanCommands);
 
         if (! $this->isValidArtisanCommand($task, $artisanCommands)) {
-            $this->error("`{$task}` is not a valid artisan command. Please start again");
+            $this->warn(trans('scheduler::messages.invalid_artisan_command', ['task' => $task]));
             exit();
         }
 
@@ -117,10 +117,10 @@ class ScheduleAddCommand extends ScheduleCommand
 
     private function askForJobTask()
     {
-        $job = $this->ask(trans('scheduler::questions.job'));
+        $job = $this->ask(trans('scheduler::questions.task.job'));
 
         if (! $this->isValidJob($job)) {
-            $this->warn("`{$job}` class does not exist. Please try again");
+            $this->warn(trans('scheduler::messages.invalid_job_class', ['job' => $job]));
             exit();
         }
 
@@ -146,13 +146,13 @@ class ScheduleAddCommand extends ScheduleCommand
         $allowed = config('scheduler.cron_attempts', 1);
 
         if (! CronExpression::isValidExpression($cron) && $tries < $allowed) {
-            $this->warn("{$cron} is an invalid cron expression. Please try again");
+            $this->warn(trans('scheduler::messages.invalid_cron_warn', ['cron' => $cron]));
             $tries++;
             $cron = $this->askForCronExpression($tries);
         }
 
         if (! CronExpression::isValidExpression($cron) && $tries >= $allowed) {
-            $this->error("{$cron} is an invalid cron expression. Exiting...");
+            $this->error(trans('scheduler::messages.invalid_cron_error', ['cron' => $cron]));
             exit();
         }
 
@@ -192,7 +192,7 @@ class ScheduleAddCommand extends ScheduleCommand
             : false;
 
         if ($choice) {
-            $this->alert('Ensure your default cache driver is redis or memcached – https://laravel.com/docs/scheduling#running-tasks-on-one-server');
+            $this->alert(trans('scheduler::messages.cache_driver_alert'));
         }
 
         return $choice;
