@@ -1,11 +1,15 @@
 <?php
 
 /** @var \Illuminate\Database\Eloquent\Factory $factory */
+
+use Koomai\Scheduler\Constants\TaskType;
+use Koomai\Scheduler\ScheduledTask;
+
 $factory->define(
-    \Koomai\Scheduler\ScheduledTask::class,
+    ScheduledTask::class,
     function (Faker\Generator $faker) {
         return [
-            'type' => \Koomai\Scheduler\Constants\TaskType::ARTISAN,
+            'type' => TaskType::ARTISAN,
             'task' => 'cache:clear --quiet',
             'description' => 'Test description',
             'cron' => '* * * * *',
