@@ -49,9 +49,9 @@ class ScheduleAddCommand extends ScheduleCommand
      */
     public function handle()
     {
-        $this->type = $this->choice('Select type of scheduled task', TaskType::values());
+        $this->type = $this->choice(trans('scheduler::questions.type'), TaskType::values());
         $task = $this->askForTask();
-        $description = $this->ask('Enter a short description (30 characters or less)');
+        $description = $this->ask(trans('scheduler::questions.description'));
         $cron = $this->askForCronExpression();
         $timezone = $this->askForTimezone();
         $environments = config('scheduler.environments') ?: $this->askForEnvironments();
@@ -88,46 +88,43 @@ class ScheduleAddCommand extends ScheduleCommand
     {
         switch ($this->type) {
             case TaskType::ARTISAN:
-                $task = $this->artisanTaskHandler();
+                $task = $this->askForArtisanTask();
                 break;
             case TaskType::JOB:
-                $task = $this->jobTaskHandler();
+                $task = $this->askForJobTask();
                 break;
             default:
-                $this->warn('Invalid scheduled task type');
+                $this->warn(trans('scheduler::messages.invalid_task_type'));
                 exit();
         }
 
         return $task;
     }
 
-    private function artisanTaskHandler()
+    private function askForArtisanTask()
     {
         $artisanCommands = array_keys(Artisan::all());
 
-        $task = $this->anticipate(
-            'Enter your artisan command with arguments and options, e.g. `telescope:prune --hours=24`',
-            $artisanCommands
-        );
+        $task = $this->anticipate(trans('scheduler::questions.task.artisan'), $artisanCommands);
 
         if (! $this->isValidArtisanCommand($task, $artisanCommands)) {
-            $this->error("`{$task}` is not a valid artisan command. Please start again");
+            $this->warn(trans('scheduler::messages.invalid_artisan_command', ['task' => $task]));
             exit();
         }
 
         return $task;
     }
 
-    private function jobTaskHandler()
+    private function askForJobTask()
     {
-        $job = $this->ask("Enter the fully qualified classname of the job you would like to schedule, e.g. `App\Jobs\SendEmail`");
+        $job = $this->ask(trans('scheduler::questions.task.job'));
 
         if (! $this->isValidJob($job)) {
-            $this->warn("`{$job}` class does not exist. Please try again");
+            $this->warn(trans('scheduler::messages.invalid_job_class', ['job' => $job]));
             exit();
         }
 
-        $this->queue = $this->ask('If this job needs to be dispatched to a specific queue, enter the queue name or leave empty');
+        $this->queue = $this->ask(trans('scheduler::questions.queue'));
 
         return $job;
     }
@@ -144,18 +141,18 @@ class ScheduleAddCommand extends ScheduleCommand
 
     private function askForCronExpression($tries = 1)
     {
-        $cron = $this->ask('Enter the cron expression for your task, e.g. `0 12 * * 5`. Check out https://crontab.guru if you need help');
+        $cron = $this->ask(trans('scheduler::questions.cron'));
 
         $allowed = config('scheduler.cron_attempts', 1);
 
         if (! CronExpression::isValidExpression($cron) && $tries < $allowed) {
-            $this->warn("{$cron} is an invalid cron expression. Please try again");
+            $this->warn(trans('scheduler::messages.invalid_cron_warn', ['cron' => $cron]));
             $tries++;
             $cron = $this->askForCronExpression($tries);
         }
 
         if (! CronExpression::isValidExpression($cron) && $tries >= $allowed) {
-            $this->error("{$cron} is an invalid cron expression. Exiting...");
+            $this->error(trans('scheduler::messages.invalid_cron_error', ['cron' => $cron]));
             exit();
         }
 
@@ -164,41 +161,38 @@ class ScheduleAddCommand extends ScheduleCommand
 
     private function askForTimezone()
     {
-        return $this->anticipate(
-            'Enter a timezone or leave empty to use default timezone',
-            DateTimeZone::listIdentifiers()
-        );
+        return $this->anticipate(trans('scheduler::questions.timezone'), DateTimeZone::listIdentifiers());
     }
 
     private function askForEnvironments()
     {
-        $environments = $this->ask('Enter a comma-separated list of environments this task should run in, e.g. `prod,staging`. Leave empty to run in all environments.');
+        $environments = $this->ask(trans('scheduler::questions.environments'));
 
         return is_null($environments) ? [] : explode(',', $environments);
     }
 
     private function askIfTaskShouldRunWithoutOverlapping()
     {
-        return $this->choice('Run tasks without overlapping?', ['No', 'Yes']) === 'Yes'
+        return $this->choice(trans('scheduler::questions.overlapping'), ['No', 'Yes']) === 'Yes'
                     ? true
                     : false;
     }
 
     private function askIfTaskShouldRunInMaintenanceMode()
     {
-        return $this->choice('Run task even in maintenance mode?', ['No', 'Yes']) === 'Yes'
+        return $this->choice(trans('scheduler::questions.maintenance'), ['No', 'Yes']) === 'Yes'
             ? true
             : false;
     }
 
     private function askIfTaskShouldRunOnOneServer()
     {
-        $choice = $this->choice('Run task only on one server? Note: You must be using redis or memcached as your default cache driver', ['No', 'Yes']) === 'Yes'
+        $choice = $this->choice(trans('scheduler::questions.one_server'), ['No', 'Yes']) === 'Yes'
             ? true
             : false;
 
         if ($choice) {
-            $this->alert('Ensure your default cache driver is redis or memcached – https://laravel.com/docs/scheduling#running-tasks-on-one-server');
+            $this->alert(trans('scheduler::messages.cache_driver_alert'));
         }
 
         return $choice;
@@ -206,16 +200,16 @@ class ScheduleAddCommand extends ScheduleCommand
 
     private function askIfTaskShouldRunInBackground()
     {
-        return $this->choice('Run task in background?', ['No', 'Yes']) === 'Yes'
+        return $this->choice(trans('scheduler::questions.background'), ['No', 'Yes']) === 'Yes'
             ? true
             : false;
     }
 
     private function askForOutputFilePath()
     {
-        if ($this->type !== TaskType::JOB && $this->confirm('Do you want to send the output of this task to a file?')) {
-            $outputFilePath = $this->ask('Enter file path');
-            $this->appendOutput = $this->choice('Append output to file?', ['No', 'Yes']) === 'Yes'
+        if ($this->type !== TaskType::JOB && $this->confirm(trans('scheduler::questions.confirm_output_path'))) {
+            $outputFilePath = $this->ask(trans('scheduler::questions.output_path'));
+            $this->appendOutput = $this->choice(trans('scheduler::questions.append_output'), ['No', 'Yes']) === 'Yes'
                 ? true
                 : false;
 
@@ -229,6 +223,6 @@ class ScheduleAddCommand extends ScheduleCommand
             return;
         }
 
-        return $this->ask('Enter an email address to email output to or leave empty');
+        return $this->ask(trans('scheduler::questions.output_email'));
     }
 }

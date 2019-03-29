@@ -9,6 +9,8 @@ use Koomai\Scheduler\Console\Commands\ScheduleAddCommand;
 use Koomai\Scheduler\Console\Commands\ScheduleDueCommand;
 use Koomai\Scheduler\Console\Commands\ScheduleListCommand;
 use Koomai\Scheduler\Console\Commands\ScheduleShowCommand;
+use Koomai\Scheduler\Events\CompletedScheduledTask;
+use Koomai\Scheduler\Events\StartingScheduledTask;
 use Koomai\Scheduler\Repositories\ScheduledTaskRepository;
 use Koomai\Scheduler\Console\Commands\ScheduleDeleteCommand;
 use Koomai\Scheduler\Contracts\ScheduledTaskRepositoryInterface;
@@ -22,10 +24,11 @@ class SchedulerServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-                __DIR__.'/../config/scheduler.php' => config_path('scheduler.php'),
+                __DIR__.'/../config/scheduler.php' => config_path('questions.php'),
             ], 'config');
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang/', 'scheduler');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -82,7 +85,13 @@ class SchedulerServiceProvider extends ServiceProvider
                 /* @var \Illuminate\Console\Scheduling\Event $scheduledEvent */
                 $scheduledEvent
                     ->cron($task->cron)
-                    ->timezone($task->timezone ?? config('app.timezone'));
+                    ->timezone($task->timezone ?? config('app.timezone'))
+                    ->before(function() use ($task) {
+                        StartingScheduledTask::dispatch($task);
+                    })
+                    ->after(function () use ($task) {
+                        CompletedScheduledTask::dispatch($task);
+                    });
 
                 if (! empty($task->environments)) {
                     $scheduledEvent->environments($task->environments);

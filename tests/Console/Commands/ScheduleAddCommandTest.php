@@ -42,12 +42,11 @@ class ScheduleAddCommandTest extends TestCase
     public function shouldDisplayErrorMessageWhenIncorrectArtisanCommandIsEntered()
     {
        $this->artisan('schedule:add')
-           ->expectsQuestion('Select type of scheduled task', TaskType::ARTISAN)
-           ->expectsQuestion('Enter your artisan command with arguments and options, e.g. `telescope:prune --hours=24`', 'command:invalid')
-           ->expectsOutput('`command:invalid` is not a valid  command. Please start again');
+           ->expectsQuestion(trans('scheduler::questions.type'), TaskType::ARTISAN)
+           ->expectsQuestion(trans('scheduler::questions.task.artisan'), 'command:invalid')
+           ->expectsOutput(trans('scheduler::messages.invalid_artisan_command', ['task' => 'command:invalid']))
+           ->assertExitCode(1);
 
        $this->assertEquals(1,1);
-
-       dump('test');
     }
 }
