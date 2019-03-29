@@ -67,8 +67,8 @@ class ScheduleAddCommand extends ScheduleCommand
         $environments = config('scheduler.environments') ?: $this->askForEnvironments();
         $withoutOverlapping = config('scheduler.without_overlapping') ?? $this->askIfTaskShouldRunWithoutOverlapping();
         $onOneServer = config('scheduler.on_one_server') ?? $this->askIfTaskShouldRunOnOneServer();
-        $runInBackground = config('scheduler.run_in_background') ?? $this->askIfTaskShouldRunInBackground();
         $inMaintenanceMode = config('scheduler.in_maintenance_mode') ?? $this->askIfTaskShouldRunInMaintenanceMode();
+        $runInBackground = config('scheduler.run_in_background') ?? $this->askIfTaskShouldRunInBackground();
         $outputPath = config('scheduler.output_path') ?? $this->askForOutputFilePath();
         $outputEmail = config('scheduler.output_email') ?? $this->askForOutputEmail();
 
@@ -155,13 +155,13 @@ class ScheduleAddCommand extends ScheduleCommand
 
         if (! CronExpression::isValidExpression($cron)) {
             $this->warn(trans('scheduler::messages.invalid_cron_warn', ['cron' => $cron]));
-        }
 
-        $cron = $this->ask(trans('scheduler::questions.cron'));
+            $cron = $this->ask(trans('scheduler::questions.cron'));
 
-        if (! CronExpression::isValidExpression($cron)) {
-            $this->error(trans('scheduler::messages.invalid_cron_error', ['cron' => $cron]));
-            return;
+            if (! CronExpression::isValidExpression($cron)) {
+                $this->error(trans('scheduler::messages.invalid_cron_error', ['cron' => $cron]));
+                return;
+            }
         }
 
         return $cron;
@@ -184,20 +184,20 @@ class ScheduleAddCommand extends ScheduleCommand
         return $this->choice(trans('scheduler::questions.overlapping'), ['No', 'Yes']) === 'Yes';
     }
 
-    private function askIfTaskShouldRunInMaintenanceMode()
-    {
-        return $this->choice(trans('scheduler::questions.maintenance'), ['No', 'Yes']) === 'Yes';
-    }
-
     private function askIfTaskShouldRunOnOneServer()
     {
         $choice = $this->choice(trans('scheduler::questions.one_server'), ['No', 'Yes']) === 'Yes';
 
         if ($choice) {
-            $this->alert(trans('scheduler::messages.cache_driver_alert'));
+            $this->warn(trans('scheduler::messages.cache_driver_alert'));
         }
 
         return $choice;
+    }
+
+    private function askIfTaskShouldRunInMaintenanceMode()
+    {
+        return $this->choice(trans('scheduler::questions.maintenance'), ['No', 'Yes']) === 'Yes';
     }
 
     private function askIfTaskShouldRunInBackground()
