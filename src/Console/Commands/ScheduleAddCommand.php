@@ -168,28 +168,22 @@ class ScheduleAddCommand extends ScheduleCommand
     {
         $environments = $this->ask(trans('scheduler::questions.environments'));
 
-        return is_null($environments) ? [] : explode(',', $environments);
+        return $environments === null ? [] : explode(',', $environments);
     }
 
     private function askIfTaskShouldRunWithoutOverlapping()
     {
-        return $this->choice(trans('scheduler::questions.overlapping'), ['No', 'Yes']) === 'Yes'
-                    ? true
-                    : false;
+        return $this->choice(trans('scheduler::questions.overlapping'), ['No', 'Yes']) === 'Yes';
     }
 
     private function askIfTaskShouldRunInMaintenanceMode()
     {
-        return $this->choice(trans('scheduler::questions.maintenance'), ['No', 'Yes']) === 'Yes'
-            ? true
-            : false;
+        return $this->choice(trans('scheduler::questions.maintenance'), ['No', 'Yes']) === 'Yes';
     }
 
     private function askIfTaskShouldRunOnOneServer()
     {
-        $choice = $this->choice(trans('scheduler::questions.one_server'), ['No', 'Yes']) === 'Yes'
-            ? true
-            : false;
+        $choice = $this->choice(trans('scheduler::questions.one_server'), ['No', 'Yes']) === 'Yes';
 
         if ($choice) {
             $this->alert(trans('scheduler::messages.cache_driver_alert'));
@@ -200,18 +194,14 @@ class ScheduleAddCommand extends ScheduleCommand
 
     private function askIfTaskShouldRunInBackground()
     {
-        return $this->choice(trans('scheduler::questions.background'), ['No', 'Yes']) === 'Yes'
-            ? true
-            : false;
+        return $this->choice(trans('scheduler::questions.background'), ['No', 'Yes']) === 'Yes';
     }
 
     private function askForOutputFilePath()
     {
         if ($this->type !== TaskType::JOB && $this->confirm(trans('scheduler::questions.confirm_output_path'))) {
             $outputFilePath = $this->ask(trans('scheduler::questions.output_path'));
-            $this->appendOutput = $this->choice(trans('scheduler::questions.append_output'), ['No', 'Yes']) === 'Yes'
-                ? true
-                : false;
+            $this->appendOutput = $this->choice(trans('scheduler::questions.append_output'), ['No', 'Yes']) === 'Yes';
 
             return $outputFilePath;
         }
