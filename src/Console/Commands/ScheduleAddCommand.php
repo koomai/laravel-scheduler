@@ -50,9 +50,19 @@ class ScheduleAddCommand extends ScheduleCommand
     public function handle()
     {
         $this->type = $this->choice(trans('scheduler::questions.type'), TaskType::values());
+
         $task = $this->askForTask();
+        if (!$task) {
+            return 1;
+        }
+
         $description = $this->ask(trans('scheduler::questions.description'));
+
         $cron = $this->askForCronExpression();
+        if (!$cron) {
+            return 1;
+        }
+
         $timezone = $this->askForTimezone();
         $environments = config('scheduler.environments') ?: $this->askForEnvironments();
         $withoutOverlapping = config('scheduler.without_overlapping') ?? $this->askIfTaskShouldRunWithoutOverlapping();
@@ -94,8 +104,8 @@ class ScheduleAddCommand extends ScheduleCommand
                 $task = $this->askForJobTask();
                 break;
             default:
+                $task = null;
                 $this->warn(trans('scheduler::messages.invalid_task_type'));
-                exit();
         }
 
         return $task;
@@ -108,8 +118,8 @@ class ScheduleAddCommand extends ScheduleCommand
         $task = $this->anticipate(trans('scheduler::questions.task.artisan'), $artisanCommands);
 
         if (! $this->isValidArtisanCommand($task, $artisanCommands)) {
-            $this->warn(trans('scheduler::messages.invalid_artisan_command', ['task' => $task]));
-            exit();
+            $this->error(trans('scheduler::messages.invalid_artisan_command', ['task' => $task]));
+            return;
         }
 
         return $task;
@@ -120,8 +130,8 @@ class ScheduleAddCommand extends ScheduleCommand
         $job = $this->ask(trans('scheduler::questions.task.job'));
 
         if (! $this->isValidJob($job)) {
-            $this->warn(trans('scheduler::messages.invalid_job_class', ['job' => $job]));
-            exit();
+            $this->error(trans('scheduler::messages.invalid_job_class', ['job' => $job]));
+            return;
         }
 
         $this->queue = $this->ask(trans('scheduler::questions.queue'));
@@ -139,21 +149,19 @@ class ScheduleAddCommand extends ScheduleCommand
         return class_exists($job);
     }
 
-    private function askForCronExpression($tries = 1)
+    private function askForCronExpression()
     {
         $cron = $this->ask(trans('scheduler::questions.cron'));
 
-        $allowed = config('scheduler.cron_attempts', 1);
-
-        if (! CronExpression::isValidExpression($cron) && $tries < $allowed) {
+        if (! CronExpression::isValidExpression($cron)) {
             $this->warn(trans('scheduler::messages.invalid_cron_warn', ['cron' => $cron]));
-            $tries++;
-            $cron = $this->askForCronExpression($tries);
         }
 
-        if (! CronExpression::isValidExpression($cron) && $tries >= $allowed) {
+        $cron = $this->ask(trans('scheduler::questions.cron'));
+
+        if (! CronExpression::isValidExpression($cron)) {
             $this->error(trans('scheduler::messages.invalid_cron_error', ['cron' => $cron]));
-            exit();
+            return;
         }
 
         return $cron;
