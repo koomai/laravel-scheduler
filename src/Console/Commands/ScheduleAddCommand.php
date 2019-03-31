@@ -17,8 +17,20 @@ class ScheduleAddCommand extends ScheduleCommand
      *
      * @var string
      */
-    protected $signature = 'schedule:add';
-
+    protected $signature = 'schedule:add {--type= : The type of scheduled task}
+                {--task= : Command with arguments/options or fully qualified Jobs classname }
+                {--description= : Scheduled task description in 30 characters}
+                {--cron= : Cron expression for schedule. Check out https://crontab.guru if you need help}
+                {--timezone= : Timezone for scheduled task}
+                {--environments= : Comma-separated list of environments the task should run in}
+                {--queue= : Queue name if scheduled job needs to run on a specific queue}
+                {--without-overlapping : Set this flag if the task should run without overlapping}
+                {--on-one-server : Set this flag if the task should run on one server only. Requires redis/memcached cache driver}
+                {--run-in-background : Set this flag if the task should run in the background}
+                {--in-maintenance-mode : Set this flag if the task should run even in maintenance mode}
+                {--output-path= : Add path to file where output should be sent to}
+                {--append-output : Set flag if the output should be appended to the file}
+                {--output-email= : Add email address if output should be sent via email}';
     /**
      * The console command description.
      *

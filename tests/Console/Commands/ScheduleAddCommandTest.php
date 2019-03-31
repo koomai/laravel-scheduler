@@ -100,7 +100,7 @@ class ScheduleAddCommandTest extends TestCase
             ->expectsQuestion(trans('scheduler::questions.output_email'), 'test@test.com')
             ->assertExitCode(0);
 
-            $expectedData =             [
+            $expectedData = [
                 'type' => TaskType::ARTISAN,
                 'task' => 'schedule:show',
                 'description' => 'Some description',
