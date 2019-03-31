@@ -42,7 +42,7 @@ class ScheduleAddCommandTest extends TestCase
     public function shouldDisplayErrorMessageAndExitWhenIncorrectArtisanCommandIsEntered()
     {
        $this->artisan('schedule:add')
-           ->expectsQuestion(trans('scheduler::questions.type'), TaskType::ARTISAN)
+           ->expectsQuestion(trans('scheduler::questions.type'), TaskType::COMMAND)
            ->expectsQuestion(trans('scheduler::questions.task.artisan'), 'invalid:command')
            ->expectsOutput(trans('scheduler::messages.invalid_artisan_command', ['task' => 'invalid:command']))
            ->assertExitCode(1);
@@ -66,7 +66,7 @@ class ScheduleAddCommandTest extends TestCase
     public function shouldDisplayErrorMessageIfCronExpressionIsWrongTwoTimes()
     {
         $this->artisan('schedule:add')
-             ->expectsQuestion(trans('scheduler::questions.type'), TaskType::ARTISAN)
+             ->expectsQuestion(trans('scheduler::questions.type'), TaskType::COMMAND)
              ->expectsQuestion(trans('scheduler::questions.task.artisan'), 'schedule:show')
              ->expectsQuestion(trans('scheduler::questions.description'), 'Some description')
              ->expectsQuestion(trans('scheduler::questions.cron'), '* * *')
@@ -83,7 +83,7 @@ class ScheduleAddCommandTest extends TestCase
     {
 
         $this->artisan('schedule:add')
-            ->expectsQuestion(trans('scheduler::questions.type'), TaskType::ARTISAN)
+            ->expectsQuestion(trans('scheduler::questions.type'), TaskType::COMMAND)
             ->expectsQuestion(trans('scheduler::questions.task.artisan'), 'schedule:show')
             ->expectsQuestion(trans('scheduler::questions.description'), 'Some description')
             ->expectsQuestion(trans('scheduler::questions.cron'), '* * * * *')
@@ -101,7 +101,7 @@ class ScheduleAddCommandTest extends TestCase
             ->assertExitCode(0);
 
             $expectedData = [
-                'type' => TaskType::ARTISAN,
+                'type' => TaskType::COMMAND,
                 'task' => 'schedule:show',
                 'description' => 'Some description',
                 'cron' => '* * * * *',

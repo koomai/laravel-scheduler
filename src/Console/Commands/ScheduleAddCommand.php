@@ -17,7 +17,7 @@ class ScheduleAddCommand extends ScheduleCommand
      *
      * @var string
      */
-    protected $signature = 'schedule:add {--type= : The type of scheduled task}
+    protected $signature = 'schedule:add {--type= : The type of scheduled task. Options: job or command}
                 {--task= : Command with arguments/options or fully qualified Jobs classname }
                 {--description= : Scheduled task description in 30 characters}
                 {--cron= : Cron expression for schedule. Check out https://crontab.guru if you need help}
@@ -61,6 +61,10 @@ class ScheduleAddCommand extends ScheduleCommand
      */
     public function handle()
     {
+        if ($this->option('type') && $this->option('task') && $this->option('cron')) {
+            return $this->handleWithoutPrompts();
+        }
+
         $this->type = $this->choice(trans('scheduler::questions.type'), TaskType::values());
 
         $task = $this->askForTask();
@@ -106,10 +110,19 @@ class ScheduleAddCommand extends ScheduleCommand
         $this->generateTable($task);
     }
 
+    private function handleWithoutPrompts()
+    {
+        if (!$this->isValidTaskType()) {
+            $this->warn(trans('scheduler::messages.invalid_task_type'));
+            return 1;
+        }
+
+    }
+
     private function askForTask()
     {
         switch ($this->type) {
-            case TaskType::ARTISAN:
+            case TaskType::COMMAND:
                 $task = $this->askForArtisanTask();
                 break;
             case TaskType::JOB:
@@ -234,5 +247,14 @@ class ScheduleAddCommand extends ScheduleCommand
         }
 
         return $this->ask(trans('scheduler::questions.output_email'));
+    }
+
+    /**
+     * @return bool
+     * @throws \ReflectionException
+     */
+    private function isValidTaskType(): bool
+    {
+        return !in_array(strtolower($this->option('type')), array_map('strtolower', TaskType::keys()));
     }
 }

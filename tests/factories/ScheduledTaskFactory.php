@@ -9,7 +9,7 @@ $factory->define(
     ScheduledTask::class,
     function (Faker\Generator $faker) {
         return [
-            'type' => TaskType::ARTISAN,
+            'type' => TaskType::COMMAND,
             'task' => 'cache:clear --quiet',
             'description' => 'Test description',
             'cron' => '* * * * *',

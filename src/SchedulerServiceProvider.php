@@ -73,7 +73,7 @@ class SchedulerServiceProvider extends ServiceProvider
                             $scheduledEvent = $schedule->job(new $task->task);
                         }
                         break;
-                    case TaskType::ARTISAN:
+                    case TaskType::COMMAND:
                         $scheduledEvent = $schedule->command($task->task);
                         break;
                     default:
