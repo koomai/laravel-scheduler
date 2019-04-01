@@ -78,13 +78,10 @@ class ScheduleAddCommand extends ScheduleCommand
      */
     private function handleWithoutPrompts()
     {
-        if (! $this->isValidTaskType($this->option('type'))) {
-            $this->warn(trans('scheduler::messages.invalid_task_type'));
+        if (! $this->isValidTaskType(['type' => $this->option('type')])) {
+            $this->warn(trans('scheduler::messages.invalid_task_type', ['attribute' => $this->option('type')]));
             return 1;
         }
-
-
-
 
         $scheduledTask = $this->createTask();
         $this->generateTable($scheduledTask);
