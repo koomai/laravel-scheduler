@@ -6,26 +6,15 @@ use Cron\CronExpression;
 use DateTimeZone;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Validator;
+use Koomai\Scheduler\Constants\TaskType;
 use Koomai\Scheduler\Rules\CronExpressionRule;
 use Koomai\Scheduler\Rules\TaskTypeRule;
 
 trait ValidatesInput
 {
-    private static function rules()
-    {
-        $rules = [
-            'type' => ['required', new TaskTypeRule],
-            'timezone' => ['null', 'timezone'],
-            'cron' => ['required', new CronExpressionRule]
-        ];
-    }
-
     private function isValidTaskType($type): bool
     {
-        return Validator::make($type, [
-            'type' => ['required', new TaskTypeRule]
-            ]
-        )->passes();
+        return in_array($type, TaskType::values());
     }
 
     private function isValidArtisanCommand($task): bool
