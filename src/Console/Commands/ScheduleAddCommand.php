@@ -61,6 +61,7 @@ class ScheduleAddCommand extends ScheduleCommand
      *
      * @return mixed
      * @throws \ReflectionException
+     * @throws \Koomai\Constants\InvalidConstantException
      */
     public function handle()
     {
@@ -75,13 +76,35 @@ class ScheduleAddCommand extends ScheduleCommand
      * Execute the console command by parsing options
      *
      * @return mixed
+     * @throws \Koomai\Constants\InvalidConstantException
      */
     private function handleWithoutPrompts()
     {
-        if (! $this->isValidTaskType(['type' => $this->option('type')])) {
-            $this->warn(trans('scheduler::messages.invalid_task_type', ['attribute' => $this->option('type')]));
+        if (! $this->validate($this->options())) {
+            foreach ($this->errors as $error) {
+                $this->error($error);
+            }
+
             return 1;
         }
+
+        $this->type = TaskType::get(ucfirst(strtolower($this->option('type'))));
+        $this->task = $this->option('task');
+        $this->taskDescription = $this->option('description');
+        $this->cron = $this->option('cron');
+        $this->timezone = $this->option('timezone');
+        $this->environments = config('scheduler.environments') ?:
+            ($this->option('environments') === null
+                ? []
+                : explode(',', $this->option('environments'))
+            );
+        $this->withoutOverlapping = config('scheduler.without_overlapping') ?? $this->option('without-overlapping');
+        $this->onOneServer = config('scheduler.on_one_server') ?? $this->option('on-one-server');
+        $this->inMaintenanceMode = config('scheduler.in_maintenance_mode') ?? $this->option('in-maintenance-mode');
+        $this->runInBackground = config('scheduler.run_in_background') ?? $this->option('run-in-background');
+        $this->outputPath = config('scheduler.output_path') ?? $this->option('output-path');
+        $this->appendOutput = $this->option('append-output');
+        $this->outputEmail = config('scheduler.output_email') ?? $this->option('output-email');
 
         $scheduledTask = $this->createTask();
         $this->generateTable($scheduledTask);
@@ -116,29 +139,29 @@ class ScheduleAddCommand extends ScheduleCommand
     {
         switch ($this->type) {
             case TaskType::COMMAND:
-                $task = $this->askForArtisanTask();
+                $task = $this->askForArtisanCommandTask();
                 break;
             case TaskType::JOB:
                 $task = $this->askForJobTask();
                 break;
             default:
                 $task = null;
-                $this->warn(trans('scheduler::messages.invalid_task_type', ['attribute' => $this->type]));
+                $this->warn(trans('scheduler::messages.invalid_task_type', ['type' => $this->type]));
         }
 
         return $task;
     }
 
-    private function askForArtisanTask(): string
+    private function askForArtisanCommandTask(): string
     {
-        $task = $this->anticipate(trans('scheduler::questions.task.artisan'), array_keys(Artisan::all()));
+        $command = $this->anticipate(trans('scheduler::questions.task.artisan'), array_keys(Artisan::all()));
 
-        while (! $this->isValidArtisanCommand($task)) {
-            $this->warn(trans('scheduler::messages.invalid_artisan_command', ['attribute' => $task]));
-            $task = $this->anticipate(trans('scheduler::questions.task.artisan'), array_keys(Artisan::all()));
+        while (! $this->isValidArtisanCommand($command)) {
+            $this->warn(trans('scheduler::messages.invalid_artisan_command', ['command' => $command]));
+            $command = $this->anticipate(trans('scheduler::questions.task.artisan'), array_keys(Artisan::all()));
         }
 
-        return $task;
+        return $command;
     }
 
     private function askForJobTask(): string
@@ -146,7 +169,7 @@ class ScheduleAddCommand extends ScheduleCommand
         $job = $this->ask(trans('scheduler::questions.task.job'));
 
         while (! $this->isValidJob($job)) {
-            $this->warn(trans('scheduler::messages.invalid_job_class', ['attribute' => $job]));
+            $this->warn(trans('scheduler::messages.invalid_job_class', ['job' => $job]));
             $job = $this->ask(trans('scheduler::questions.task.job'));
         }
 
@@ -160,7 +183,7 @@ class ScheduleAddCommand extends ScheduleCommand
         $cron = $this->ask(trans('scheduler::questions.cron'));
 
         while (! $this->isValidCronExpression($cron)) {
-            $this->warn(trans('scheduler::messages.invalid_cron_warn', ['attribute' => $cron]));
+            $this->warn(trans('scheduler::messages.invalid_cron_expression', ['cron' => $cron]));
             $cron = $this->ask(trans('scheduler::questions.cron'));
         }
 
@@ -172,7 +195,7 @@ class ScheduleAddCommand extends ScheduleCommand
         $timezone = $this->anticipate(trans('scheduler::questions.timezone'), DateTimeZone::listIdentifiers());
 
         while ($timezone !== null && ! $this->isValidTimezone($timezone)) {
-            $this->warn(trans('scheduler::messages.invalid_timezone', ['attribute' => $timezone]));
+            $this->warn(trans('scheduler::messages.invalid_timezone', ['timezone' => $timezone]));
             $timezone = $this->anticipate(trans('scheduler::questions.timezone'), DateTimeZone::listIdentifiers());
         }
 

@@ -6,6 +6,6 @@ use Koomai\Constants\Constants as AbstractConstants;
 
 class TaskType extends AbstractConstants
 {
-    const COMMAND = 'Artisan Command';
+    const COMMAND = 'Command';
     const JOB = 'Job';
 }
