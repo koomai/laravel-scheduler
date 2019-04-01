@@ -3,14 +3,16 @@
 namespace Koomai\Scheduler\Console\Commands;
 
 use DateTimeZone;
-use Cron\CronExpression;
 use Illuminate\Support\Facades\Artisan;
+use Koomai\Scheduler\Console\Commands\Traits\ValidatesInput;
 use Koomai\Scheduler\Constants\TaskType;
 use Koomai\Scheduler\Console\Commands\Traits\BuildsScheduledTasksTable;
+use Koomai\Scheduler\ScheduledTask;
 
 class ScheduleAddCommand extends ScheduleCommand
 {
-    use BuildsScheduledTasksTable;
+    use BuildsScheduledTasksTable,
+        ValidatesInput;
 
     /**
      * The name and signature of the console command.
@@ -31,6 +33,7 @@ class ScheduleAddCommand extends ScheduleCommand
                 {--output-path= : Add path to file where output should be sent to}
                 {--append-output : Set flag if the output should be appended to the file}
                 {--output-email= : Add email address if output should be sent via email}';
+
     /**
      * The console command description.
      *
@@ -38,20 +41,20 @@ class ScheduleAddCommand extends ScheduleCommand
      */
     protected $description = 'Add an artisan command or a job as scheduled task';
 
-    /**
-     * @var string
-     */
     private $type;
-
-    /**
-     * @var string|null
-     */
+    private $task;
+    private $taskDescription;
+    private $cron;
+    private $timezone;
     private $queue;
-
-    /**
-     * @var bool
-     */
+    private $environments;
+    private $withoutOverlapping;
+    private $onOneServer;
+    private $inMaintenanceMode;
+    private $runInBackground;
+    private $outputPath;
     private $appendOutput = false;
+    private $outputEmail;
 
     /**
      * Execute the console command.
@@ -65,61 +68,54 @@ class ScheduleAddCommand extends ScheduleCommand
             return $this->handleWithoutPrompts();
         }
 
-        $this->type = $this->choice(trans('scheduler::questions.type'), TaskType::values());
-
-        $task = $this->askForTask();
-        if (!$task) {
-            return 1;
-        }
-
-        $description = $this->ask(trans('scheduler::questions.description'));
-
-        $cron = $this->askForCronExpression();
-        if (!$cron) {
-            return 1;
-        }
-
-        $timezone = $this->askForTimezone();
-        $environments = config('scheduler.environments') ?: $this->askForEnvironments();
-        $withoutOverlapping = config('scheduler.without_overlapping') ?? $this->askIfTaskShouldRunWithoutOverlapping();
-        $onOneServer = config('scheduler.on_one_server') ?? $this->askIfTaskShouldRunOnOneServer();
-        $inMaintenanceMode = config('scheduler.in_maintenance_mode') ?? $this->askIfTaskShouldRunInMaintenanceMode();
-        $runInBackground = config('scheduler.run_in_background') ?? $this->askIfTaskShouldRunInBackground();
-        $outputPath = config('scheduler.output_path') ?? $this->askForOutputFilePath();
-        $outputEmail = config('scheduler.output_email') ?? $this->askForOutputEmail();
-
-        $task = $this->repository->create(
-            [
-                'type' => $this->type,
-                'task' => $task,
-                'description' => $description,
-                'cron' => $cron,
-                'timezone' => $timezone,
-                'environments' => $environments,
-                'queue' => $this->queue,
-                'without_overlapping' => $withoutOverlapping,
-                'on_one_server' => $onOneServer,
-                'run_in_background' => $runInBackground,
-                'in_maintenance_mode' => $inMaintenanceMode,
-                'output_path' => $outputPath,
-                'append_output' => $this->appendOutput,
-                'output_email' => $outputEmail,
-            ]
-        );
-
-        $this->generateTable($task);
+        return $this->handleWithPrompts();
     }
 
+    /**
+     * Execute the console command by parsing options
+     *
+     * @return mixed
+     */
     private function handleWithoutPrompts()
     {
-        if (!$this->isValidTaskType()) {
+        if (! $this->isValidTaskType($this->option('type'))) {
             $this->warn(trans('scheduler::messages.invalid_task_type'));
             return 1;
         }
 
+
+
+
+        $scheduledTask = $this->createTask();
+        $this->generateTable($scheduledTask);
     }
 
-    private function askForTask()
+    /**
+     * Execute the console command by prompting the user for options
+     *
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    private function handleWithPrompts()
+    {
+        $this->type = $this->choice(trans('scheduler::questions.type'), TaskType::values());
+        $this->task = $this->askForTask();
+        $this->taskDescription = $this->ask(trans('scheduler::questions.description'));
+        $this->cron = $this->askForCronExpression();
+        $this->timezone = $this->askForTimezone();
+        $this->environments = config('scheduler.environments') ?: $this->askForEnvironments();
+        $this->withoutOverlapping = config('scheduler.without_overlapping') ?? $this->askIfTaskShouldRunWithoutOverlapping();
+        $this->onOneServer = config('scheduler.on_one_server') ?? $this->askIfTaskShouldRunOnOneServer();
+        $this->inMaintenanceMode = config('scheduler.in_maintenance_mode') ?? $this->askIfTaskShouldRunInMaintenanceMode();
+        $this->runInBackground = config('scheduler.run_in_background') ?? $this->askIfTaskShouldRunInBackground();
+        $this->outputPath = config('scheduler.output_path') ?? $this->askForOutputFilePath();
+        $this->outputEmail = config('scheduler.output_email') ?? $this->askForOutputEmail();
+
+        $scheduledTask = $this->createTask();
+        $this->generateTable($scheduledTask);
+    }
+
+    private function askForTask(): ?string
     {
         switch ($this->type) {
             case TaskType::COMMAND:
@@ -130,33 +126,31 @@ class ScheduleAddCommand extends ScheduleCommand
                 break;
             default:
                 $task = null;
-                $this->warn(trans('scheduler::messages.invalid_task_type'));
+                $this->warn(trans('scheduler::messages.invalid_task_type', ['attribute' => $this->type]));
         }
 
         return $task;
     }
 
-    private function askForArtisanTask()
+    private function askForArtisanTask(): string
     {
-        $artisanCommands = array_keys(Artisan::all());
+        $task = $this->anticipate(trans('scheduler::questions.task.artisan'), array_keys(Artisan::all()));
 
-        $task = $this->anticipate(trans('scheduler::questions.task.artisan'), $artisanCommands);
-
-        if (! $this->isValidArtisanCommand($task, $artisanCommands)) {
-            $this->error(trans('scheduler::messages.invalid_artisan_command', ['task' => $task]));
-            return;
+        while (! $this->isValidArtisanCommand($task)) {
+            $this->warn(trans('scheduler::messages.invalid_artisan_command', ['attribute' => $task]));
+            $task = $this->anticipate(trans('scheduler::questions.task.artisan'), array_keys(Artisan::all()));
         }
 
         return $task;
     }
 
-    private function askForJobTask()
+    private function askForJobTask(): string
     {
         $job = $this->ask(trans('scheduler::questions.task.job'));
 
-        if (! $this->isValidJob($job)) {
-            $this->error(trans('scheduler::messages.invalid_job_class', ['job' => $job]));
-            return;
+        while (! $this->isValidJob($job)) {
+            $this->warn(trans('scheduler::messages.invalid_job_class', ['attribute' => $job]));
+            $job = $this->ask(trans('scheduler::questions.task.job'));
         }
 
         $this->queue = $this->ask(trans('scheduler::questions.queue'));
@@ -164,52 +158,43 @@ class ScheduleAddCommand extends ScheduleCommand
         return $job;
     }
 
-    private function isValidArtisanCommand($task, $artisanCommands)
-    {
-        return in_array(strtok($task, ' '), $artisanCommands);
-    }
-
-    private function isValidJob($job)
-    {
-        return class_exists($job);
-    }
-
-    private function askForCronExpression()
+    private function askForCronExpression(): string
     {
         $cron = $this->ask(trans('scheduler::questions.cron'));
 
-        if (! CronExpression::isValidExpression($cron)) {
-            $this->warn(trans('scheduler::messages.invalid_cron_warn', ['cron' => $cron]));
-
+        while (! $this->isValidCronExpression($cron)) {
+            $this->warn(trans('scheduler::messages.invalid_cron_warn', ['attribute' => $cron]));
             $cron = $this->ask(trans('scheduler::questions.cron'));
-
-            if (! CronExpression::isValidExpression($cron)) {
-                $this->error(trans('scheduler::messages.invalid_cron_error', ['cron' => $cron]));
-                return;
-            }
         }
 
         return $cron;
     }
 
-    private function askForTimezone()
+    private function askForTimezone(): ?string
     {
-        return $this->anticipate(trans('scheduler::questions.timezone'), DateTimeZone::listIdentifiers());
+        $timezone = $this->anticipate(trans('scheduler::questions.timezone'), DateTimeZone::listIdentifiers());
+
+        while ($timezone !== null && ! $this->isValidTimezone($timezone)) {
+            $this->warn(trans('scheduler::messages.invalid_timezone', ['attribute' => $timezone]));
+            $timezone = $this->anticipate(trans('scheduler::questions.timezone'), DateTimeZone::listIdentifiers());
+        }
+
+        return $timezone;
     }
 
-    private function askForEnvironments()
+    private function askForEnvironments(): array
     {
         $environments = $this->ask(trans('scheduler::questions.environments'));
 
         return $environments === null ? [] : explode(',', $environments);
     }
 
-    private function askIfTaskShouldRunWithoutOverlapping()
+    private function askIfTaskShouldRunWithoutOverlapping(): bool
     {
         return $this->choice(trans('scheduler::questions.overlapping'), ['No', 'Yes']) === 'Yes';
     }
 
-    private function askIfTaskShouldRunOnOneServer()
+    private function askIfTaskShouldRunOnOneServer(): bool
     {
         $choice = $this->choice(trans('scheduler::questions.one_server'), ['No', 'Yes']) === 'Yes';
 
@@ -220,17 +205,17 @@ class ScheduleAddCommand extends ScheduleCommand
         return $choice;
     }
 
-    private function askIfTaskShouldRunInMaintenanceMode()
+    private function askIfTaskShouldRunInMaintenanceMode(): bool
     {
         return $this->choice(trans('scheduler::questions.maintenance'), ['No', 'Yes']) === 'Yes';
     }
 
-    private function askIfTaskShouldRunInBackground()
+    private function askIfTaskShouldRunInBackground(): bool
     {
         return $this->choice(trans('scheduler::questions.background'), ['No', 'Yes']) === 'Yes';
     }
 
-    private function askForOutputFilePath()
+    private function askForOutputFilePath(): ?string
     {
         if ($this->type !== TaskType::JOB && $this->confirm(trans('scheduler::questions.confirm_output_path'))) {
             $outputFilePath = $this->ask(trans('scheduler::questions.output_path'));
@@ -238,23 +223,41 @@ class ScheduleAddCommand extends ScheduleCommand
 
             return $outputFilePath;
         }
+
+        return null;
     }
 
-    private function askForOutputEmail()
+    private function askForOutputEmail(): ?string
     {
-        if ($this->type === TaskType::JOB) {
-            return;
+        if ($this->type !== TaskType::JOB) {
+            return $this->ask(trans('scheduler::questions.output_email'));
         }
 
-        return $this->ask(trans('scheduler::questions.output_email'));
+        return null;
     }
 
     /**
-     * @return bool
-     * @throws \ReflectionException
+     * @return \Koomai\Scheduler\ScheduledTask
      */
-    private function isValidTaskType(): bool
+    private function createTask(): ScheduledTask
     {
-        return !in_array(strtolower($this->option('type')), array_map('strtolower', TaskType::keys()));
+        return $this->repository->create(
+            [
+                'type' => $this->type,
+                'task' => $this->task,
+                'description' => $this->taskDescription,
+                'cron' => $this->cron,
+                'timezone' => $this->timezone,
+                'environments' => $this->environments,
+                'queue' => $this->queue,
+                'without_overlapping' => $this->withoutOverlapping,
+                'on_one_server' => $this->onOneServer,
+                'run_in_background' => $this->runInBackground,
+                'in_maintenance_mode' => $this->inMaintenanceMode,
+                'output_path' => $this->outputPath,
+                'append_output' => $this->appendOutput,
+                'output_email' => $this->outputEmail,
+            ]
+        );
     }
 }
