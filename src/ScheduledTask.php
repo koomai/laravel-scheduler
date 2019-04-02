@@ -23,4 +23,14 @@ class ScheduledTask extends Model
 
         $this->table = config('scheduler.table');
     }
+
+    /**
+     * Save type as defined in Koomai\Scheduler\Constants\TaskType::class
+     *
+     * @param $value
+     */
+    public function setTypeAttribute($value)
+    {
+        $this->attributes['type'] = ucfirst(strtolower($value));
+    }
 }

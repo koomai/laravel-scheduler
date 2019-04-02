@@ -88,7 +88,7 @@ class ScheduleAddCommand extends ScheduleCommand
             return 1;
         }
 
-        $this->type = TaskType::get(ucfirst(strtolower($this->option('type'))));
+        $this->type = $this->option('type');
         $this->task = $this->option('task');
         $this->taskDescription = $this->option('description');
         $this->cron = $this->option('cron');
