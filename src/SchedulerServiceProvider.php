@@ -24,7 +24,7 @@ class SchedulerServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-                __DIR__.'/../config/scheduler.php' => config_path('questions.php'),
+                __DIR__.'/../config/scheduler.php' => config_path('scheduler.php'),
             ], 'config');
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
@@ -40,7 +40,10 @@ class SchedulerServiceProvider extends ServiceProvider
             ]);
         }
 
-        // Retrieve and register scheduled tasks from the repository only if the table exists
+        /**
+         * Retrieve and register scheduled tasks from the repository only if the table exists
+         * @var $repository ScheduledTaskRepositoryInterface
+         */
         $repository = resolve(ScheduledTaskRepositoryInterface::class);
         if ($repository->hasTable()) {
             $this->scheduleTasks($repository->all());
