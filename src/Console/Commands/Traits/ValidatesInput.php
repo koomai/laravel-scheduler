@@ -21,6 +21,11 @@ trait ValidatesInput
             'timezone' => $timezone,
         ] = $options;
 
+        if (!$type or !$task or !$cron) {
+            $this->errors[] = trans('scheduler::messages.required_options');
+            return false;
+        }
+
         if (! $this->isValidTaskType($type)) {
             $this->errors[] = trans('scheduler::messages.invalid_task_type', ['type' => $type]);
         }
