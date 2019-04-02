@@ -105,13 +105,24 @@ class CacheScheduledTaskRepository implements ScheduledTaskRepositoryInterface
     }
 
     /**
+     * Cache only if the table exists
+     * This prevents a false value from being cached if the migration hasn't run
+     *
      * @return bool
      */
     public function hasTable(): bool
     {
-        return $this->cache->rememberForever('scheduled_tasks.has_table', function () {
-            return $this->repository->hasTable();
-        });
+        $key = 'scheduled_tasks.has_table';
+
+        if (!$this->cache->get($key)) {
+            $this->cache->forget($key);
+
+            return $this->cache->rememberForever($key, function () {
+                return $this->repository->hasTable();
+            });
+        }
+
+        return $this->cache->get($key);
     }
 
     /**
