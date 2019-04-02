@@ -2,12 +2,11 @@
 
 namespace Koomai\Scheduler\Tests;
 
-use Illuminate\Console\Command;
 use Koomai\Scheduler\Constants\TaskType;
 use Koomai\Scheduler\SchedulerServiceProvider;
 use Orchestra\Testbench\TestCase;
 
-class ScheduleAddCommandTest extends TestCase
+class ScheduleAddCommandWithPromptTest extends TestCase
 {
     /**
      * Setup the test environment.
@@ -20,60 +19,9 @@ class ScheduleAddCommandTest extends TestCase
         $this->artisan('migrate', ['--database' => 'testing'])->run();
     }
 
-    /**
-     * Define environment setup.
-     *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
-    {
-//         $app['config']->set('scheduler.environments', ['production']);
-    }
-
     protected function getPackageProviders($app)
     {
         return [SchedulerServiceProvider::class];
-    }
-
-    /**
-     * @test
-     */
-    public function shouldDisplayErrorMessageAndExitWhenIncorrectArtisanCommandIsEntered()
-    {
-       $this->artisan('schedule:add')
-           ->expectsQuestion(trans('scheduler::questions.type'), TaskType::COMMAND)
-           ->expectsQuestion(trans('scheduler::questions.task.artisan'), 'invalid:command')
-           ->expectsOutput(trans('scheduler::messages.invalid_artisan_command', ['task' => 'invalid:command']))
-           ->assertExitCode(1);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldDisplayErrorMessageAndExitWhenNonExistentJobClassIsEntered()
-    {
-        $this->artisan('schedule:add')
-             ->expectsQuestion(trans('scheduler::questions.type'), TaskType::JOB)
-             ->expectsQuestion(trans('scheduler::questions.task.job'), 'App\Job\DoesNotExist')
-             ->expectsOutput(trans('scheduler::messages.invalid_job_class', ['job' => 'App\Job\DoesNotExist']))
-             ->assertExitCode(1);
-    }
-
-    /**
-     * @test
-     */
-    public function shouldDisplayErrorMessageIfCronExpressionIsWrongTwoTimes()
-    {
-        $this->artisan('schedule:add')
-             ->expectsQuestion(trans('scheduler::questions.type'), TaskType::COMMAND)
-             ->expectsQuestion(trans('scheduler::questions.task.artisan'), 'schedule:show')
-             ->expectsQuestion(trans('scheduler::questions.description'), 'Some description')
-             ->expectsQuestion(trans('scheduler::questions.cron'), '* * *')
-             ->expectsOutput(trans('scheduler::messages.invalid_cron_warn', ['cron' => '* * *']))
-             ->expectsQuestion(trans('scheduler::questions.cron'), '* * * *')
-             ->expectsOutput(trans('scheduler::messages.invalid_cron_error', ['cron' => '* * * *']))
-             ->assertExitCode(1);
     }
 
     /**
