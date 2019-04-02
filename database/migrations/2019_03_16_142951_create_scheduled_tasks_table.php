@@ -23,7 +23,6 @@ class CreateScheduledTasksTable extends Migration
             $table->text('environments')->nullable();
             $table->string('queue')->nullable();
             $table->boolean('without_overlapping')->default(0);
-            $table->boolean('on_one_server')->default(0);
             $table->boolean('run_in_background')->default(0);
             $table->boolean('in_maintenance_mode')->default(0);
             $table->string('output_path')->nullable();
