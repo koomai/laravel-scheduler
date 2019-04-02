@@ -46,7 +46,7 @@ trait ValidatesInput
 
     private function isValidTaskType($type): bool
     {
-        return in_array(strtolower($type), array_map('strtolower', TaskType::values()));
+        return in_array(strtolower($type), array_map('strtolower', TaskType::values()), true);
     }
 
     private function isValidArtisanCommand($task): bool
@@ -66,6 +66,6 @@ trait ValidatesInput
 
     private function isValidTimezone($timezone): bool
     {
-        return in_array($timezone, DateTimeZone::listIdentifiers());
+        return in_array($timezone, DateTimeZone::listIdentifiers(), true);
     }
 }

@@ -23,7 +23,8 @@
         "illuminate/console": "^5.8",
         "illuminate/database": "^5.8",
         "illuminate/events": "^5.8",
-        "koomai/constants": "^1.1"
+        "koomai/constants": "^1.1",
+        "ext-json": "*"
     },
     "require-dev": {
         "orchestra/testbench": "^3.8",

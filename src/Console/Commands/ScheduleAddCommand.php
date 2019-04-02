@@ -119,7 +119,15 @@ class ScheduleAddCommand extends ScheduleCommand
     private function handleWithPrompts()
     {
         $this->type = $this->choice(trans('scheduler::questions.type'), TaskType::values());
+
         $this->task = $this->askForTask();
+
+        if (!$this->task) {
+            $this->error(trans('scheduler::messages.invalid_task_type', ['type' => $this->type]));
+
+            return 1;
+        }
+
         $this->taskDescription = $this->ask(trans('scheduler::questions.description'));
         $this->cron = $this->askForCronExpression();
         $this->timezone = $this->askForTimezone();
@@ -146,7 +154,6 @@ class ScheduleAddCommand extends ScheduleCommand
                 break;
             default:
                 $task = null;
-                $this->warn(trans('scheduler::messages.invalid_task_type', ['type' => $this->type]));
         }
 
         return $task;
