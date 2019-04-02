@@ -16,7 +16,6 @@ trait BuildsScheduledTasksTable
         'Environments',
         'Queue',
         'Without Overlapping',
-        'On One Server',
         'Run in Background',
         'In Maintenance Mode',
         'Output Path',
@@ -48,7 +47,6 @@ trait BuildsScheduledTasksTable
                                implode(',', $task->environments) ?: 'None',
                                $task->queue ?? 'N/A',
                                $task->without_overlapping ? 'Yes' : 'No',
-                               $task->one_one_server ? 'Yes' : 'No',
                                $task->run_in_background ? 'Yes' : 'No',
                                $task->even_in_maintenance_mode ? 'Yes' : 'No',
                                $task->output_path ?: 'N/A',
@@ -57,6 +55,6 @@ trait BuildsScheduledTasksTable
                            ];
                         });
 
-        $this->table($this->headers, $attributes, 'box');
+        $this->table($this->headers, $attributes);
     }
 }

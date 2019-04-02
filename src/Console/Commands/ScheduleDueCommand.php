@@ -79,7 +79,7 @@ class ScheduleDueCommand extends ScheduleCommand
             ];
         });
 
-        $this->table($this->headers, $eventsDue, 'box');
+        $this->table($this->headers, $eventsDue);
     }
 
     /**

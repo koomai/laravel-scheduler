@@ -101,10 +101,6 @@ class SchedulerServiceProvider extends ServiceProvider
                     $scheduledEvent->withoutOverlapping();
                 }
 
-                if ($task->on_one_server) {
-                    $scheduledEvent->onOneServer();
-                }
-
                 if ($task->run_in_background) {
                     $scheduledEvent->runInBackground();
                 }
