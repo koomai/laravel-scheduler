@@ -19,10 +19,10 @@ class ScheduleAddCommand extends ScheduleCommand
      *
      * @var string
      */
-    protected $signature = 'schedule:add {--type= : The type of scheduled task. Options: job or command}
-                {--task= : Command with arguments/options or fully qualified Jobs classname }
+    protected $signature = 'schedule:add {--type= : [Required] The type of scheduled task. Options: job or command}
+                {--task= : [Required] Command with arguments/options or fully qualified Jobs classname }
                 {--description= : Scheduled task description in 30 characters}
-                {--cron= : Cron expression for schedule. Check out https://crontab.guru if you need help}
+                {--cron= : [Required] Cron expression for schedule. Check out https://crontab.guru if you need help}
                 {--timezone= : Timezone for scheduled task}
                 {--environments= : Comma-separated list of environments the task should run in}
                 {--queue= : Queue name if scheduled job needs to run on a specific queue}
@@ -60,8 +60,8 @@ class ScheduleAddCommand extends ScheduleCommand
      * Execute the console command.
      *
      * @return mixed
-     * @throws \ReflectionException
      * @throws \Koomai\Constants\InvalidConstantException
+     * @throws \ReflectionException
      */
     public function handle()
     {
