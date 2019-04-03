@@ -71,6 +71,7 @@ class ScheduleAddCommand extends ScheduleCommand
         $this->taskDescription = $this->option('description');
         $this->cron = $this->option('cron');
         $this->timezone = $this->option('timezone');
+        $this->queue = $this->option('queue');
         $this->environments = config('scheduler.environments') ?:
             ($this->option('environments') === null
                 ? []
@@ -80,7 +81,7 @@ class ScheduleAddCommand extends ScheduleCommand
         $this->inMaintenanceMode = config('scheduler.in_maintenance_mode') ?? $this->option('in-maintenance-mode');
         $this->runInBackground = config('scheduler.run_in_background') ?? $this->option('run-in-background');
         $this->outputPath = config('scheduler.output_path') ?? $this->option('output-path');
-        $this->appendOutput = $this->option('append-output');
+        $this->appendOutput = config('scheduler.append_output') ?? $this->option('append-output');
         $this->outputEmail = config('scheduler.output_email') ?? $this->option('output-email');
 
         $scheduledTask = $this->createTask();

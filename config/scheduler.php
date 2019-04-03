@@ -28,10 +28,10 @@ return [
     |--------------------------------------------------------------------------
     | Additional prompts
     |--------------------------------------------------------------------------
-    | You can set a default value for the properties below to avoid being prompted every time
-    | when running schedule:add. Null values trigger prompts.
+    | You can set a default value for the properties below to avoid having to
+    | type all the options when running schedule:add. Null values trigger prompts.
+
     | without_overlapping - true/false
-    | on_one_server - true/false
     | run_in_background - true/false
     | in_maintenance_mode - true/false
     | output_path - string
@@ -39,10 +39,10 @@ return [
     */
 
     'without_overlapping' => null,
-    'on_one_server' => null,
     'run_in_background' => null,
     'in_maintenance_mode' => null,
     'output_path' => null,
+    'append_output' => null,
     'output_email' => null,
 
     /*
