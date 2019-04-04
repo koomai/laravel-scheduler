@@ -2,6 +2,7 @@
 
 namespace Koomai\Scheduler\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
@@ -67,14 +68,14 @@ class ScheduleDueCommand extends ScheduleCommand
 
         $eventsDue = collect($this->schedule->events())->map(function (Event $event) {
             $scheduledTask = $this->mapEventToScheduledTask($event);
-
+            dump($event->timezone);
             return [
                 'id' => $scheduledTask ? $scheduledTask->id : 'N/A',
                 'type' => $scheduledTask ? $scheduledTask->type : 'Console Kernel',
                 'task' => $scheduledTask ? $scheduledTask->task : $this->parseTaskFromEvent($event),
                 'description'   => $scheduledTask ? $scheduledTask->description : $event->description,
                 'cron' => $event->expression,
-                'due' => $event->nextRunDate()->format(config('scheduler.date_format')),
+                'due' => $this->getNextRunDate($event),
                 'environments' => implode(', ', $event->environments),
             ];
         });
@@ -108,5 +109,25 @@ class ScheduleDueCommand extends ScheduleCommand
         }
 
         return $task;
+    }
+
+    /**
+     * CronExpression returns all dates with UTC timezone,
+     * This method sets it back to the timezone attached to the event
+     *
+     * @param \Illuminate\Console\Scheduling\Event $event
+     *
+     * @return string
+     */
+    private function getNextRunDate(Event $event): string
+    {
+        $date = $event->nextRunDate();
+
+        if ($event->timezone !== $date->format('e')) {
+            $date = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d H:i:s'))
+                          ->setTimezone($event->timezone);
+        }
+
+        return $date->format(config('scheduler.date_format'));
     }
 }
