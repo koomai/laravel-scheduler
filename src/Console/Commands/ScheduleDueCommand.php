@@ -124,7 +124,7 @@ class ScheduleDueCommand extends ScheduleCommand
         $date = $event->nextRunDate();
 
         if ($event->timezone !== $date->format('e')) {
-            $date = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d H:i:s'))
+            $date = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d H:i:s'), $event->timezone)
                           ->setTimezone($event->timezone);
         }
 
