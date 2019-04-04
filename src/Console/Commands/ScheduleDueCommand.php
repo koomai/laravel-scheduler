@@ -68,7 +68,7 @@ class ScheduleDueCommand extends ScheduleCommand
 
         $eventsDue = collect($this->schedule->events())->map(function (Event $event) {
             $scheduledTask = $this->mapEventToScheduledTask($event);
-            dump($event->timezone);
+
             return [
                 'id' => $scheduledTask ? $scheduledTask->id : 'N/A',
                 'type' => $scheduledTask ? $scheduledTask->type : 'Console Kernel',
@@ -124,7 +124,7 @@ class ScheduleDueCommand extends ScheduleCommand
         $date = $event->nextRunDate();
 
         if ($event->timezone !== $date->format('e')) {
-            $date = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d H:i:s'))
+            $date = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d H:i:s'), $event->timezone)
                           ->setTimezone($event->timezone);
         }
 
