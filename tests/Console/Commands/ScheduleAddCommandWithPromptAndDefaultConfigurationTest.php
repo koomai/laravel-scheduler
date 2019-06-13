@@ -40,6 +40,7 @@ class ScheduleAddCommandWithPromptAndDefaultConfigurationTest extends TestCase
      */
     public function shouldNotAskForEnvironmentsIfAlreadyDefinedInConfig()
     {
+        $this->markTestSkipped('Unable to set repeating expectations');
 
         $this->artisan('schedule:add')
             ->expectsQuestion(trans('scheduler::questions.type'), TaskType::COMMAND)
